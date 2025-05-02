@@ -1,19 +1,20 @@
 using WeatherApp.Services;
 using WeatherApp.Models;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace WeatherApp;
 
 public partial class WeatherPage : ContentPage
 {
-    public ObservableCollection<Models.List> WeatherList { get; set; }
+    public ObservableCollection<Grouping<DateTime, Models.List>> WeatherList { get; set; }
     public double latitude;
     public double longitude;
 
     public WeatherPage()
     {
         InitializeComponent();
-        WeatherList = new ObservableCollection<Models.List>();
+        WeatherList = new ObservableCollection<Grouping<DateTime, Models.List>>();
         cvWeather.ItemsSource = WeatherList;
     }
 
@@ -29,15 +30,24 @@ public partial class WeatherPage : ContentPage
 
     public async Task GetLocation()
     {
-        var location = await Geolocation.GetLocationAsync();
-        if (location != null)
+        try
         {
-            latitude = location.Latitude;
-            longitude = location.Longitude;
+            var location = await Geolocation.GetLocationAsync();
+            if (location != null)
+            {
+                latitude = location.Latitude;
+                longitude = location.Longitude;
+            }
+            else
+            {
+                Console.WriteLine("Location not available.");
+                await DisplayAlert("Error", "Unable to fetch location. Please enable location services.", "OK");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine("Location not available.");
+            Console.WriteLine($"Location error: {ex.Message}");
+            await DisplayAlert("Error", "Unable to fetch location. Please try again.", "OK");
         }
     }
 
@@ -49,14 +59,19 @@ public partial class WeatherPage : ContentPage
 
     public async Task GetWeatherDataByLocation(double latitude, double longitude)
     {
-        var result = await ApiService.GetWeather(latitude, longitude);
-        if (result != null)
+        var root = await ApiService.GetWeather(latitude, longitude);
+        if (root != null && root.List != null)
         {
-            UpdateUI(result);
+            var forecast = await ApiService.GetFiveDayForecast(latitude, longitude);
+            if (forecast != null)
+            {
+                UpdateUI(forecast, root.City);
+            }
         }
         else
         {
             Console.WriteLine("Weather data not available.");
+            await DisplayAlert("Error", "Unable to fetch weather data. Please try again.", "OK");
         }
     }
 
@@ -74,42 +89,56 @@ public partial class WeatherPage : ContentPage
         }
     }
 
-
     public async Task GetWeatherDataByCity(string city)
     {
-        var result = await ApiService.GetWeatherByCity(city);
-        if (result != null)
+        var root = await ApiService.GetWeatherByCity(city);
+        if (root != null && root.List != null)
         {
-            UpdateUI(result);
+            var forecast = await ApiService.GetFiveDayForecastByCity(city);
+            if (forecast != null)
+            {
+                UpdateUI(forecast, root.City);
+            }
         }
         else
         {
             Console.WriteLine("Weather data not available.");
+            await DisplayAlert("Error", "Unable to fetch weather data for the specified city. Please try again.", "OK");
         }
     }
 
-    public void UpdateUI(Root result)
+    public void UpdateUI(Dictionary<DateTime, List<Models.List>> forecast, City? city)
     {
         WeatherList.Clear();
-        if (result.List != null)
+
+        foreach (var day in forecast)
         {
-            foreach (var item in result.List)
-            {
-                WeatherList.Add(item);
-            }
+            var grouping = new Grouping<DateTime, Models.List>(day.Key, day.Value);
+            WeatherList.Add(grouping);
         }
 
-        var city = result.City?.Name;
-        var firstItem = result.List?.FirstOrDefault();
+        var firstDay = forecast.FirstOrDefault();
+        var firstItem = firstDay.Value?.FirstOrDefault();
 
-        if (city != null || firstItem != null)
+        if (firstItem != null)
         {
-            lbCity.Text = city ?? string.Empty;
-            lbWeatherDesc.Text = firstItem?.Weather?[0].Description ?? string.Empty;
-            lbTemperature.Text = firstItem?.Main?.Temperature + "°C" ?? string.Empty;
-            lbHumidity.Text = firstItem?.Main?.Humidity + "%" ?? string.Empty;
-            lbWind.Text = firstItem?.Wind?.Speed + "km/h" ?? string.Empty;
-            imgWeatherIcon.Source = firstItem?.Weather?[0].CustomIcon ?? string.Empty;
+            lbCity.Text = city?.Name ?? string.Empty;
+            lbWeatherDesc.Text = firstItem.Weather?[0].Description ?? string.Empty;
+            lbTemperature.Text = firstItem.Main?.Temperature + "°C" ?? string.Empty;
+            lbHumidity.Text = firstItem.Main?.Humidity + "%" ?? string.Empty;
+            lbWind.Text = firstItem.Wind?.Speed + "km/h" ?? string.Empty;
+            imgWeatherIcon.Source = firstItem.Weather?[0].CustomIcon ?? "default_icon.png";
         }
     }
 }
+public class Grouping<TKey, TItem> : List<TItem>
+{
+    public TKey Key { get; private set; }
+
+    public Grouping(TKey key, IEnumerable<TItem> items) : base(items)
+    {
+        Key = key;
+    }
+}
+
+

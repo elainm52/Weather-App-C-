@@ -10,15 +10,19 @@ namespace WeatherApp.Services
 {
     class ApiService
     {
+        private const string ApiKey = "204e8fa81c85119b7d48213d9aaab414";
+        private const string BaseUrl = "https://api.openweathermap.org/data/2.5/forecast";
+
+        // Fetches weather data for a specific location using latitude and longitude.
         public static async Task<Root?> GetWeather(double latitude, double longitude)
         {
-            var client = new HttpClient();
-            var url = $"https://api.openweathermap.org/data/2.5/forecast?lat={latitude}&lon={longitude}&units=metric&appid=204e8fa81c85119b7d48213d9aaab414";
-            Console.WriteLine($"Request URL: {url}"); 
+            var url = $"{BaseUrl}?lat={latitude}&lon={longitude}&units=metric&appid={ApiKey}";
+            Console.WriteLine($"Request URL: {url}");
             try
             {
+                var client = new HttpClient();
                 var response = await client.GetStringAsync(url);
-                Console.WriteLine(response); 
+                Console.WriteLine(response);
                 return JsonConvert.DeserializeObject<Root>(response);
             }
             catch (HttpRequestException e)
@@ -27,27 +31,41 @@ namespace WeatherApp.Services
                 return null;
             }
         }
-
+        // Fetches weather data for a specific city.
         public static async Task<Root?> GetWeatherByCity(string city)
         {
-            var httpClient = new HttpClient();
-            var url = $"https://api.openweathermap.org/data/2.5/forecast?q={city}&units=metric&appid=204e8fa81c85119b7d48213d9aaab414";
+            var url = $"{BaseUrl}?q={city}&units=metric&appid={ApiKey}";
             Console.WriteLine($"Request URL: {url}");
             try
             {
-                var response = await httpClient.GetAsync(url);
-                Console.WriteLine($"Response Status Code: {response.StatusCode}");
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"API Response: {jsonResponse}");
-                    return JsonConvert.DeserializeObject<Root>(jsonResponse);
-                }
-                else
-                {
-                    Console.WriteLine($"API error: {response.StatusCode} - {response.ReasonPhrase}");
+                var client = new HttpClient();
+                var response = await client.GetStringAsync(url);
+                Console.WriteLine(response);
+                return JsonConvert.DeserializeObject<Root>(response);
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"Request error: {e.Message}");
+                return null;
+            }
+        }
+        // Fetches and groups weather data by day for a specific location using latitude and longitude.
+        public static async Task<Dictionary<DateTime, List<Models.List>>?> GetFiveDayForecast(double latitude, double longitude)
+        {
+            var url = $"{BaseUrl}?lat={latitude}&lon={longitude}&units=metric&appid={ApiKey}";
+            Console.WriteLine($"Request URL: {url}");
+            try
+            {
+                var client = new HttpClient();
+                var response = await client.GetStringAsync(url);
+                Console.WriteLine(response);
+                var root = JsonConvert.DeserializeObject<Root>(response);
+
+                if (root?.List == null)
                     return null;
-                }
+
+                // Group data by day
+                return GroupDataByDay(root.List);
             }
             catch (HttpRequestException e)
             {
@@ -56,7 +74,39 @@ namespace WeatherApp.Services
             }
         }
 
+        // Fetches and groups weather data by day for a specific city.
+        public static async Task<Dictionary<DateTime, List<Models.List>>?> GetFiveDayForecastByCity(string city)
+        {
+            var url = $"{BaseUrl}?q={city}&units=metric&appid={ApiKey}";
+            Console.WriteLine($"Request URL: {url}");
+            try
+            {
+                var client = new HttpClient();
+                var response = await client.GetStringAsync(url);
+                Console.WriteLine(response);
+                var root = JsonConvert.DeserializeObject<Root>(response);
 
+                if (root?.List == null)
+                    return null;
+
+                // Group data by day
+                return GroupDataByDay(root.List);
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"Request error: {e.Message}");
+                return null;
+            }
+        }
+
+        // Groups weather data by day.
+        private static Dictionary<DateTime, List<Models.List>> GroupDataByDay(List<Models.List> data)
+        {
+            return data
+                .Where(item => !string.IsNullOrEmpty(item.Dt_txt))
+                .GroupBy(item => DateTime.Parse(item.Dt_txt!).Date)
+                .ToDictionary(group => group.Key, group => group.ToList());
+        }
 
     }
 }
