@@ -10,29 +10,24 @@
                Aspect="AspectFill"
                Grid.RowSpan="5"
                Opacity="0.9" />
-
         <!-- Location and Search -->
         <Grid Grid.Row="0"
-              Margin="20,20,20,0"
-              ColumnDefinitions="*,Auto">
-            <Border Grid.Column="0"
-                    Stroke="LightBlue"
-                    StrokeThickness="2"
-                    Background="White"
-                    Padding="10">
-                <Label Text="Your Location"
-                       FontSize="Default" />
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="TapLocation_Tapped" />
-                </Border.GestureRecognizers>
-            </Border>
+          Margin="20,20,20,0"
+          ColumnDefinitions="*,Auto">
+            <Entry x:Name="searchEntry"
+            Placeholder="Enter city name"
+            FontSize="16"
+            BackgroundColor="White"
+            TextColor="Black"
+            Margin="0,0,10,0"
+            VerticalOptions="Center" />
+            <Button Text="Search"
+              FontSize="16"
+              BackgroundColor="#4682B4"
+              TextColor="White"
+              Clicked="ImageButton_Clicked"
+              VerticalOptions="Center" />
 
-            <ImageButton Grid.Column="1"
-                         Source="search.png"
-                         HeightRequest="30"
-                         WidthRequest="30"
-                         HorizontalOptions="End"
-                         Clicked="ImageButton_Clicked" />
         </Grid>
 
         <!-- City and Weather Description -->
@@ -94,63 +89,70 @@
         </Grid>
 
         <!-- Five-Day Forecast with Three-Hour Intervals -->
-        <Frame Grid.Row="4"
-               BackgroundColor="#80000000"
-               CornerRadius="20"
-               Padding="10"
-               Margin="0,20,0,0">
-            <Grid RowDefinitions="Auto,Auto">
-                <Label Text="Five-Day Forecast"
-                       FontSize="Medium"
-                       TextColor="White"
-                       HorizontalOptions="Center" />
-                <CollectionView Grid.Row="1"
-                                x:Name="cvWeather"
-                                HeightRequest="300"
-                                IsGrouped="True">
-                    <CollectionView.GroupHeaderTemplate>
-                        <DataTemplate>
-                            <Label Text="{Binding Key, StringFormat='{0:dddd, MMM dd}'}"
-                                   FontSize="Large"
-                                   TextColor="White"
-                                   HorizontalOptions="Center" />
-                        </DataTemplate>
-                    </CollectionView.GroupHeaderTemplate>
-                    <CollectionView.ItemsLayout>
-                        <LinearItemsLayout Orientation="Vertical"
-                                           ItemSpacing="15" />
-                    </CollectionView.ItemsLayout>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid RowDefinitions="Auto, Auto, Auto">
-                                <!-- Time -->
-                                <Label Grid.Row="0"
-                                       FontSize="Medium"
-                                       HorizontalOptions="Center"
-                                       Text="{Binding Dt_txt, StringFormat='{0:hh:mm tt}'}"
-                                       TextColor="White" />
+        <ScrollView>
+            <VerticalStackLayout Padding="20" Spacing="10">
+                <!-- Hourly Forecast -->
+                <Frame BackgroundColor="#4682B4" CornerRadius="10" Padding="10">
+                    <VerticalStackLayout>
+                        <Label Text="HOURLY FORECAST"
+                               FontSize="16"
+                               TextColor="White"
+                               FontAttributes="Bold" />
+                        <CollectionView x:Name="cvHourlyWeather"
+                                        ItemsSource="{Binding HourlyWeatherList}"
+                                        HeightRequest="100"
+                                        SelectionMode="None">
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Horizontal" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
+                                        <Label Text="{Binding Dt_txt, StringFormat='{0:hh:mm tt}'}" FontSize="14" TextColor="White" />
+                                        <Image Source="{Binding Weather[0].CustomIcon}" HeightRequest="40" />
+                                        <Label Text="{Binding Main.Temperature, StringFormat='{0}°C'}" FontSize="14" TextColor="White" />
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
 
-                                <!-- Weather Icon -->
-                                <Image Grid.Row="1"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Start"
-                                       HeightRequest="50"
-                                       WidthRequest="50"
-                                       Source="{Binding Weather[0].CustomIcon}" />
-
-                                <!-- Temperature -->
-                                <Label Grid.Row="2"
-                                       FontSize="Large"
-                                       HorizontalOptions="Center"
-                                       Text="{Binding Main.Temperature}"
-                                       TextColor="White" />
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </Grid>
-        </Frame>
+                <!-- 5-Day Forecast -->
+                <Frame BackgroundColor="#4682B4" CornerRadius="10" Padding="10">
+                    <VerticalStackLayout>
+                        <Label Text="5-DAY FORECAST"
+                               FontSize="16"
+                               TextColor="White"
+                               FontAttributes="Bold" />
+                        <CollectionView x:Name="cvFiveDayWeather"
+                                        ItemsSource="{Binding FiveDayWeatherList}"
+                                        IsGrouped="True"
+                                        SelectionMode="None">
+                            <CollectionView.GroupHeaderTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding Key, StringFormat='{0:dddd, MMM dd}'}"
+                                           FontSize="Large"
+                                           TextColor="White"
+                                           HorizontalOptions="Center" />
+                                </DataTemplate>
+                            </CollectionView.GroupHeaderTemplate>
+                            <CollectionView.ItemsLayout>
+                                <LinearItemsLayout Orientation="Vertical" />
+                            </CollectionView.ItemsLayout>
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="*,Auto,Auto" Padding="5">
+                                        <Label Text="{Binding Dt_txt, StringFormat='{0:hh:mm tt}'}" FontSize="14" TextColor="White" />
+                                        <Image Source="{Binding Weather[0].CustomIcon}" HeightRequest="30" Grid.Column="1" />
+                                        <Label Text="{Binding Main.Temperature, StringFormat='{0}°C'}" FontSize="14" TextColor="White" Grid.Column="2" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+        </ScrollView>
     </Grid>
 </ContentPage>
-
-

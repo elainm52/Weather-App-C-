@@ -99,7 +99,7 @@ namespace WeatherApp.Services
             }
         }
 
-        // Groups weather data by day.
+        // Groups weather data by day and includes 3-hour intervals.
         private static Dictionary<DateTime, List<Models.List>> GroupDataByDay(List<Models.List> data)
         {
             return data
@@ -107,6 +107,16 @@ namespace WeatherApp.Services
                 .GroupBy(item => DateTime.Parse(item.Dt_txt!).Date)
                 .ToDictionary(group => group.Key, group => group.ToList());
         }
+
+        // Groups weather data for hourly forecast (next 24 hours).
+        public static List<Models.List> GetHourlyForecast(List<Models.List> data)
+        {
+            return data
+                .Where(item => !string.IsNullOrEmpty(item.Dt_txt))
+                .Take(8) // Next 24 hours (3-hour intervals)
+                .ToList();
+        }
+
 
     }
 }

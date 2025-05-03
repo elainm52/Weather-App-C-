@@ -7,15 +7,19 @@ namespace WeatherApp;
 
 public partial class WeatherPage : ContentPage
 {
-    public ObservableCollection<Grouping<DateTime, Models.List>> WeatherList { get; set; }
+    public ObservableCollection<Models.List> HourlyWeatherList { get; set; }
+    public ObservableCollection<Grouping<DateTime, Models.List>> FiveDayWeatherList { get; set; }
+
     public double latitude;
     public double longitude;
 
     public WeatherPage()
     {
         InitializeComponent();
-        WeatherList = new ObservableCollection<Grouping<DateTime, Models.List>>();
-        cvWeather.ItemsSource = WeatherList;
+        HourlyWeatherList = new ObservableCollection<Models.List>();
+        FiveDayWeatherList = new ObservableCollection<Grouping<DateTime, Models.List>>();
+        cvHourlyWeather.ItemsSource = HourlyWeatherList;
+        cvFiveDayWeather.ItemsSource = FiveDayWeatherList;
     }
 
     protected async override void OnAppearing()
@@ -62,16 +66,24 @@ public partial class WeatherPage : ContentPage
         var root = await ApiService.GetWeather(latitude, longitude);
         if (root != null && root.List != null)
         {
-            var forecast = await ApiService.GetFiveDayForecast(latitude, longitude);
-            if (forecast != null)
+            // Populate hourly forecast
+            var hourlyForecast = ApiService.GetHourlyForecast(root.List);
+            HourlyWeatherList.Clear();
+            foreach (var item in hourlyForecast)
             {
-                UpdateUI(forecast, root.City);
+                HourlyWeatherList.Add(item);
             }
-        }
-        else
-        {
-            Console.WriteLine("Weather data not available.");
-            await DisplayAlert("Error", "Unable to fetch weather data. Please try again.", "OK");
+
+            // Populate 5-day forecast
+            var fiveDayForecast = await ApiService.GetFiveDayForecast(latitude, longitude);
+            if (fiveDayForecast != null)
+            {
+                FiveDayWeatherList.Clear();
+                foreach (var day in fiveDayForecast)
+                {
+                    FiveDayWeatherList.Add(new Grouping<DateTime, Models.List>(day.Key, day.Value));
+                }
+            }
         }
     }
 
@@ -109,12 +121,12 @@ public partial class WeatherPage : ContentPage
 
     public void UpdateUI(Dictionary<DateTime, List<Models.List>> forecast, City? city)
     {
-        WeatherList.Clear();
+        FiveDayWeatherList.Clear();
 
         foreach (var day in forecast)
         {
             var grouping = new Grouping<DateTime, Models.List>(day.Key, day.Value);
-            WeatherList.Add(grouping);
+            FiveDayWeatherList.Add(grouping);
         }
 
         var firstDay = forecast.FirstOrDefault();
