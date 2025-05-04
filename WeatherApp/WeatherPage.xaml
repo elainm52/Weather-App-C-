@@ -3,104 +3,76 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WeatherApp.WeatherPage"
              Title="WeatherPage">
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
-          RowSpacing="20">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto">
         <!-- Background Image -->
         <Image Source="backgroundimage.jpg"
                Aspect="AspectFill"
-               Grid.RowSpan="5"
+               Grid.RowSpan="4"
                Opacity="0.9" />
-        <!-- Location and Search -->
-        <Grid Grid.Row="0"
-          Margin="20,20,20,0"
-          ColumnDefinitions="*,Auto">
-            <Entry x:Name="searchEntry"
-            Placeholder="Enter city name"
-            FontSize="16"
-            BackgroundColor="White"
-            TextColor="Black"
-            Margin="0,0,10,0"
-            VerticalOptions="Center" />
-            <Button Text="Search"
-              FontSize="16"
-              BackgroundColor="#4682B4"
-              TextColor="White"
-              Clicked="ImageButton_Clicked"
-              VerticalOptions="Center" />
 
-        </Grid>
+        <!-- Make the whole visible content scrollable -->
+        <ScrollView Grid.RowSpan="4">
+            <VerticalStackLayout Spacing="20" Padding="20">
 
-        <!-- City and Weather Description -->
-        <StackLayout Grid.Row="1"
-                     Orientation="Vertical">
-            <Label x:Name="lbCity"
-                   FontSize="40"
-                   HorizontalOptions="Center"
-                   TextColor="FloralWhite" />
-            <Label x:Name="lbWeatherDesc"
-                   HorizontalOptions="Center"
-                   TextColor="NavajoWhite"
-                   FontAttributes="Bold"
-                   FontSize="20" />
-        </StackLayout>
+                <!-- Location and Search -->
+                <Grid ColumnDefinitions="*,Auto" BackgroundColor="Transparent">
+                    <Entry x:Name="entryCity"
+                           Placeholder="Your Location"
+                           FontSize="16"
+                           BackgroundColor="White"
+                           TextColor="Black"
+                           Margin="0,0,10,0"
+                           VerticalOptions="Center" />
+                    <ImageButton Source="search.png"
+                                 HeightRequest="30"
+                                 WidthRequest="30"
+                                 HorizontalOptions="End"
+                                 Clicked="ImageButton_Clicked" />
+                </Grid>
 
-        <!-- Weather Icon -->
-        <Image Grid.Row="2"
-               x:Name="imgWeatherIcon"
-               VerticalOptions="Start"
-               HeightRequest="300"
-               WidthRequest="300" />
+                <!-- City and Description -->
+                <StackLayout HorizontalOptions="Center" Spacing="5">
+                    <Label x:Name="lbCity"
+                           FontSize="40"
+                           TextColor="White"
+                           HorizontalOptions="Center" />
+                    <Label x:Name="lbWeatherDesc"
+                           FontSize="20"
+                           TextColor="LightGoldenrodYellow"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                </StackLayout>
 
-        <!-- Weather Details -->
-        <Grid Grid.Row="3"
-              RowDefinitions="Auto,Auto"
-              ColumnDefinitions="0.33*,0.33*,0.33*"
-              Margin="20">
-            <!-- Humidity -->
-            <Image Grid.Row="0"
-                   Grid.Column="0"
-                   HorizontalOptions="Center"
-                   HeightRequest="25"
-                   Source="humidity.png" />
-            <Label x:Name="lbHumidity"
-                   Grid.Row="1"
-                   Grid.Column="0"
-                   HorizontalOptions="Center" />
+                <!-- Weather Icon -->
+                <Image x:Name="imgWeatherIcon"
+                       HeightRequest="300"
+                       WidthRequest="300"
+                       HorizontalOptions="Center" />
 
-            <!-- Temperature -->
-            <Label x:Name="lbTemperature"
-                   Grid.Row="0"
-                   Grid.Column="1"
-                   Grid.RowSpan="2"
-                   HorizontalOptions="Center"
-                   FontSize="40"
-                   FontAttributes="Bold" />
+                <!-- Weather Details -->
+                <Grid RowDefinitions="Auto,Auto"
+                      ColumnDefinitions="*,*,*"
+                      VerticalOptions="Start">
+                    <!-- Humidity -->
+                    <Image Grid.Row="0" Grid.Column="0" Source="humidity.png" HeightRequest="25" HorizontalOptions="Center" />
+                    <Label x:Name="lbHumidity" Grid.Row="1" Grid.Column="0" FontSize="14" TextColor="White" HorizontalOptions="Center" />
 
-            <!-- Wind -->
-            <Image Grid.Row="0"
-                   Grid.Column="2"
-                   HorizontalOptions="Center"
-                   HeightRequest="25"
-                   Source="wind.png" />
-            <Label x:Name="lbWind"
-                   Grid.Row="1"
-                   Grid.Column="2"
-                   HorizontalOptions="Center" />
-        </Grid>
+                    <!-- Temperature -->
+                    <Label x:Name="lbTemperature" Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+                           FontSize="40" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center" />
 
-        <!-- Five-Day Forecast with Three-Hour Intervals -->
-        <ScrollView>
-            <VerticalStackLayout Padding="20" Spacing="10">
+                    <!-- Wind -->
+                    <Image Grid.Row="0" Grid.Column="2" Source="wind.png" HeightRequest="25" HorizontalOptions="Center" />
+                    <Label x:Name="lbWind" Grid.Row="1" Grid.Column="2" FontSize="14" TextColor="White" HorizontalOptions="Center" />
+                </Grid>
+
                 <!-- Hourly Forecast -->
                 <Frame BackgroundColor="#4682B4" CornerRadius="10" Padding="10">
                     <VerticalStackLayout>
-                        <Label Text="HOURLY FORECAST"
-                               FontSize="16"
-                               TextColor="White"
-                               FontAttributes="Bold" />
+                        <Label Text="HOURLY FORECAST" FontSize="16" FontAttributes="Bold" TextColor="White" />
                         <CollectionView x:Name="cvHourlyWeather"
-                                        ItemsSource="{Binding HourlyWeatherList}"
                                         HeightRequest="100"
+                                        ItemsSource="{Binding HourlyWeatherList}"
                                         SelectionMode="None">
                             <CollectionView.ItemsLayout>
                                 <LinearItemsLayout Orientation="Horizontal" />
@@ -121,20 +93,14 @@
                 <!-- 5-Day Forecast -->
                 <Frame BackgroundColor="#4682B4" CornerRadius="10" Padding="10">
                     <VerticalStackLayout>
-                        <Label Text="5-DAY FORECAST"
-                               FontSize="16"
-                               TextColor="White"
-                               FontAttributes="Bold" />
+                        <Label Text="5-DAY FORECAST" FontSize="16" FontAttributes="Bold" TextColor="White" />
                         <CollectionView x:Name="cvFiveDayWeather"
-                                        ItemsSource="{Binding FiveDayWeatherList}"
                                         IsGrouped="True"
-                                        SelectionMode="None">
+                                        SelectionMode="None"
+                                        ItemsSource="{Binding FiveDayWeatherList}">
                             <CollectionView.GroupHeaderTemplate>
                                 <DataTemplate>
-                                    <Label Text="{Binding Key, StringFormat='{0:dddd, MMM dd}'}"
-                                           FontSize="Large"
-                                           TextColor="White"
-                                           HorizontalOptions="Center" />
+                                    <Label Text="{Binding Key, StringFormat='{0:dddd, MMM dd}'}" FontSize="Large" TextColor="White" HorizontalOptions="Center" />
                                 </DataTemplate>
                             </CollectionView.GroupHeaderTemplate>
                             <CollectionView.ItemsLayout>
@@ -144,14 +110,15 @@
                                 <DataTemplate>
                                     <Grid ColumnDefinitions="*,Auto,Auto" Padding="5">
                                         <Label Text="{Binding Dt_txt, StringFormat='{0:hh:mm tt}'}" FontSize="14" TextColor="White" />
-                                        <Image Source="{Binding Weather[0].CustomIcon}" HeightRequest="30" Grid.Column="1" />
-                                        <Label Text="{Binding Main.Temperature, StringFormat='{0}°C'}" FontSize="14" TextColor="White" Grid.Column="2" />
+                                        <Image Source="{Binding Weather[0].CustomIcon}" Grid.Column="1" HeightRequest="30" />
+                                        <Label Text="{Binding Main.Temperature, StringFormat='{0}°C'}" Grid.Column="2" FontSize="14" TextColor="White" />
                                     </Grid>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
                     </VerticalStackLayout>
                 </Frame>
+
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

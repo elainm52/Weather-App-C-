@@ -89,17 +89,17 @@ public partial class WeatherPage : ContentPage
 
     private async void ImageButton_Clicked(object sender, EventArgs e)
     {
-        var response = await DisplayPromptAsync(title: "Search City", message: "Enter the city name:", placeholder: "City name", accept: "Search", cancel: "Cancel");
-        Console.WriteLine($"User Input: {response}");
+        var response = entryCity.Text?.Trim();
         if (!string.IsNullOrWhiteSpace(response))
         {
-            await GetWeatherDataByCity(response.Trim());
+            await GetWeatherDataByCity(response);
         }
         else
         {
             await DisplayAlert("Error", "City name cannot be empty.", "OK");
         }
     }
+
 
     public async Task GetWeatherDataByCity(string city)
     {
@@ -134,14 +134,17 @@ public partial class WeatherPage : ContentPage
 
         if (firstItem != null)
         {
-            lbCity.Text = city?.Name ?? string.Empty;
-            lbWeatherDesc.Text = firstItem.Weather?[0].Description ?? string.Empty;
-            lbTemperature.Text = firstItem.Main?.Temperature + "°C" ?? string.Empty;
-            lbHumidity.Text = firstItem.Main?.Humidity + "%" ?? string.Empty;
-            lbWind.Text = firstItem.Wind?.Speed + "km/h" ?? string.Empty;
+            Console.WriteLine($"City: {city?.Name}, Temp: {firstItem.Main?.Temperature}");
+            lbCity.Text = city?.Name ?? "Unknown City";
+            lbWeatherDesc.Text = firstItem.Weather?[0].Description ?? "No Description";
+            lbTemperature.Text = $"{firstItem.Main?.Temperature ?? 0}°C";
+            lbHumidity.Text = $"{firstItem.Main?.Humidity ?? 0}%";
+            lbWind.Text = $"{firstItem.Wind?.Speed ?? 0} km/h";
             imgWeatherIcon.Source = firstItem.Weather?[0].CustomIcon ?? "default_icon.png";
         }
+
     }
+
 }
 public class Grouping<TKey, TItem> : List<TItem>
 {
